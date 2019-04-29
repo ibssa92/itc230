@@ -2,10 +2,10 @@
     <body>
         <a href="/">Home</a>
 {{#if result}}
-    <h2>{{title}} Details page</h2>
+    <h2>{{title}} details</h2>
     <li>Title: {{result.title}}</li>
-    <li>Title: {{result.price}}</li>
-    <li>Title: {{result.author}}</li>
+    <li>Author: {{result.author}}</li>
+    <li>Price: $ {{result.price}}</li>
     <p>
     <a href="/delete?title={{result.title}}">Delete</a>
     </p>
