@@ -20,12 +20,13 @@ exports.get = (title) => {
 
 //delete by book title
 exports.delete = (title) => {
-    const lengthOld = books.length;
-    const books = books.filter((item) => {
+  
+    const oldLength = books.length;
+    books = books.filter((item) => {
         return item.title !== title;
     });
+
     return {
-        deleted: lengthOld !== books.length, 
-        total: books.length
+        deleted: oldLength !== books.length, total: books.length 
     };
 };
