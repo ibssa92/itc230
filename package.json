@@ -4,11 +4,17 @@
   "description": "package",
   "main": "index.js",
   "dependencies": {
+    "express-handlebars": "^3.0.2",
     "package.json": "^2.0.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^5.16.0",
+    "mocha": "^6.1.4"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint index.js",
+    "test": "mocha test/books_test.js"
   },
   "repository": {
     "type": "git",
