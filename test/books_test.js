@@ -28,7 +28,7 @@ describe("Book", function() {
         expect(result.deleted).to.be.true;
     });
     it("fails to delete an invalid book", function() {
-        let result = book.delete("travels with charlie");
+        let result = book.delete("lorem ipsum");
         expect(result.deleted).to.be.false;
     });
 
