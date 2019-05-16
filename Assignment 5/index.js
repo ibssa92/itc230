@@ -1,6 +1,6 @@
 'use strict'
 
-let book = require('./models/books.js');
+let book = require('./models/book-model.js');
 
 const express = require("express");
 const app = express();
