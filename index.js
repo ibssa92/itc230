@@ -1,54 +1,97 @@
 'use strict'
 
-let book = require('./lib/books.js');
+let express = require("express");
+let bodyParser = require("body-parser");
+let Book = require("./models/book-model"); // use database model
 
-const express = require("express");
-const app = express();
+let app = express();
 
+// configure Express app
 app.set('port', process.env.PORT || 3000);
-app.use(express.static(__dirname + '/public')); 
+app.use(express.static(__dirname + '/../public'));
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+app.use('/api', require("cors")());
+app.use((err, req, res, next) => {
+  console.log(err);
+});
 
-app.use(require("body-parser").urlencoded({extended: true}));
-
+// set template engine
 let handlebars =  require("express-handlebars");
 app.engine(".html", handlebars({extname: '.html'}));
 app.set("view engine", ".html");
 
-//HOME
-app.get('/', function(req,res){
+app.get('/', (req,res, next) => {
+    Book.find((err,books) => {
+        console.log(books)
+        if (err) return next(err);
+        res.render('home', {books: JSON.stringify(books)});    
+    });
+});
+
+app.get('/about', (req,res) => {
     res.type('text/html');
-    res.sendFile(__dirname + '/public/home.html'); 
+    res.render('about');
 });
 
-//ABOUT
-app.get('/about', function(req,res){
-    res.type('text/plain');
-    res.send('About page');
+// api's
+app.get('/api/v1/book/:title', (req, res, next) => {
+    let title = req.params.title;
+    console.log(title);
+    Book.findOne({title: title}, (err, result) => {
+        if (err || !result) return next(err);
+        res.json( result );    
+    });
 });
 
-//DELETE
-app.get('/delete', function(req,res){
-    let result = book.delete(req.query.title); 
-    res.render('delete', {title: req.query.title, result: result});
+app.get('/api/v1/books', (req,res, next) => {
+    Book.find((err,results) => {
+        if (err || !results) return next(err);
+        res.json(results);
+    });
 });
 
-//DETAILS
-app.post('/detail', function(req,res){
-    console.log(req.body)
-    var header = 'Searching for: ' + req.body.title + '<br>';
-    var found = book.get(req.body.title);
-    res.render("details", {title: req.body.title, result: found});
+app.get('/api/v1/delete/:id', (req,res, next) => {
+    Book.remove({"_id":req.params.id }, (err, result) => {
+        if (err) return next(err);
+        // return # of items deleted
+        res.json({"deleted": result.result.n});
+    });
 });
 
-// 404
-app.use(function(req,res) {
+app.post('/api/v1/add/', (req,res, next) => {
+    // find & update existing item, or add new 
+    if (!req.body._id) { // insert new document
+        let book = new Book({title:req.body.title,author:req.body.author,pubdate:req.body.pubdate});
+        book.save((err,newBook) => {
+            if (err) return next(err);
+            console.log(newBook)
+            res.json({updated: 0, _id: newBook._id});
+        });
+    } else { // update existing document
+        Book.updateOne({ _id: req.body._id}, {title:req.body.title, author: req.body.author, pubdate: req.body.pubdate }, (err, result) => {
+            if (err) return next(err);
+            res.json({updated: result.nModified, _id: req.body._id});
+        });
+    }
+});
+
+app.get('/api/v1/add/:title/:author/:pubdate', (req,res, next) => {
+    // find & update existing item, or add new 
+    let title = req.params.title;
+    Book.update({ title: title}, {title:title, author: req.params.author, pubdate: req.params.pubdate }, {upsert: true }, (err, result) => {
+        if (err) return next(err);
+        // nModified = 0 for new item, = 1+ for updated item 
+        res.json({updated: result.nModified});
+    });
+});
+
+app.use((req,res) => {
     res.type('text/plain'); 
     res.status(404);
     res.send('404 - Not found');
 });
 
-//RUN SERVER
-app.listen(app.get('port'), function() {
+app.listen(app.get('port'), () => {
     console.log('Express started');    
 });
-
